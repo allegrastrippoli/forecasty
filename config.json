@@ -1,0 +1,11 @@
+{
+    "history_size": 1000,
+    "target_size": 100,
+    "batch_size": 128,
+    "train_split_ratio": 0.8,
+    "step": 6,
+    "patience":3,
+    "epochs":50,
+    "max_trials":10, 
+    "executions_per_trial":2
+}
