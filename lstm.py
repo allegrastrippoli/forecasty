@@ -1,17 +1,19 @@
 from keras_tuner import HyperModel, RandomSearch
 import tensorflow as tf
 import json
+import math 
 
 configs = json.load(open('config.json', 'r'))
 HISTORY_SIZE = configs['history_size']
 TARGET_SIZE = configs['target_size']
 PATIENCE = configs['patience']
 EPOCHS = configs['epochs']
+STEP = configs['step']
 MAX_TRIALS = configs['max_trials']
 EXECUTIONS_PER_TRIAL = configs['executions_per_trial']
        
 class LSTM(HyperModel):
-    def __init__(self, train_shape=(HISTORY_SIZE,1), patience=PATIENCE, epochs=EPOCHS, max_trials=MAX_TRIALS, executions_per_trial=EXECUTIONS_PER_TRIAL):
+    def __init__(self, train_shape=(math.ceil(HISTORY_SIZE/STEP),1), patience=PATIENCE, epochs=EPOCHS, max_trials=MAX_TRIALS, executions_per_trial=EXECUTIONS_PER_TRIAL):
         super(LSTM, self).__init__()
         self.train_shape = train_shape
         self.patience = patience

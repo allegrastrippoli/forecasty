@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import json
+import os 
 
 configs = json.load(open('config.json', 'r'))
 HISTORY_SIZE = configs['history_size']
@@ -12,13 +13,14 @@ TRAIN_SPLIT = configs['train_split_ratio']
 STEP = configs['step']
 
 class DataProcessor:
-    def __init__(self, history_size = HISTORY_SIZE, target_size = TARGET_SIZE, batch_size: int = BATCH_SIZE, train_split: int = TRAIN_SPLIT, step = STEP, buffer_size: int = 1000):
+    def __init__(self, history_size = HISTORY_SIZE, target_size = TARGET_SIZE, batch_size: int = BATCH_SIZE, train_split: int = TRAIN_SPLIT, step = STEP, buffer_size: int = 1000, model_dir: str = "model"):
         self.history_size = history_size
         self.target_size = target_size 
         self.batch_size = batch_size
         self.train_split = train_split
         self.buffer_size = buffer_size
         self.step = step
+        self.model_dir = model_dir
 
     def scale_data(self, df: pd.DataFrame) -> np.ndarray:
         arr = df.values
@@ -31,6 +33,9 @@ class DataProcessor:
             'std': train_std
         }
 
+        if not os.path.exists(self.model_dir):
+            os.makedirs(self.model_dir)
+            
         with open("model/scaler.pkl", 'wb') as f:
             pickle.dump(scaler, f)
             print("Scaler saved")
