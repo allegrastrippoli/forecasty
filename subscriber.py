@@ -1,6 +1,7 @@
 from typing import Callable, Optional
 from model_manager import ModelManager
 from collections import deque
+from config import Config
 import numpy as np
 import threading
 import logging
@@ -25,7 +26,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class Subscriber:
     def __init__(
         self,
@@ -37,7 +37,7 @@ class Subscriber:
         prediction_callback: Optional[Callable[[deque, Optional[object]], None]] = None,
         model: Optional[object] = None,
         scaler: Optional[object] = None,
-        config = None,
+        config = Config('config.json'),
     ):
         self.channel = channel
         self.history_size = config.history_size
@@ -94,11 +94,10 @@ class Subscriber:
             logger.info(f"Received temperature: {temperature}")
 
             if self.real_time and len(self.history_buffer) == self.history_size:
-                
                 logger.info("History buffer full. Initiating real-time prediction.")
                 prediction_thread = threading.Thread(
                     target=self.prediction_callback,
-                    args=(self.history_buffer.copy(), self.model, self.scaler),
+                    args=(self.history_buffer.copy(), self.model, self.scaler, self.history_size),  # Pass history_size
                     daemon=True
                 )
                 prediction_thread.start()
@@ -106,7 +105,8 @@ class Subscriber:
             logger.warning(f"Invalid data received: {data}")
 
 
-def make_real_time_prediction(data: deque, model: Optional[object], scaler: Optional[object]):
+
+def make_real_time_prediction(data: deque, model: Optional[object], scaler: Optional[object], history_size):
     """
     :param data: A deque containing the history of temperature readings.
     :param model: The model for making predictions.
@@ -116,7 +116,7 @@ def make_real_time_prediction(data: deque, model: Optional[object], scaler: Opti
         logger.info("Using model to make predictions.")
         arr = np.array(data)
         scaled_arr = (arr - scaler['mean']) / scaler['std']
-        reshaped_arr = scaled_arr.reshape((1, HISTORY_SIZE, 1))       
+        reshaped_arr = scaled_arr.reshape((1, history_size, 1))       
         with open("predictions.txt", "a") as f:
             f.write(f"{model.predict(reshaped_arr)}\n")
     else:
@@ -124,7 +124,8 @@ def make_real_time_prediction(data: deque, model: Optional[object], scaler: Opti
 
 
 def main():
-    modelManager = ModelManager('LSTM', 'model/model.keras')
+    config = Config('config.json')  
+    modelManager = ModelManager(config, 'LSTM')
     lstmModel = modelManager.build_model()
     lstmScaler = modelManager.load_scaler()
 
