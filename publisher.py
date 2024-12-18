@@ -1,7 +1,6 @@
 import redis
 import json
 import requests
-import time
 import logging
 
 logging.basicConfig(
@@ -11,12 +10,12 @@ logging.basicConfig(
 )
 
 class Publisher:
-    def __init__(self, host='localhost', port=6379, db=0, channel='dht11:temperature'):
+    def __init__(self, host='localhost', port=6379, db=0, channel='lstm:dht11'):
         try:
             self.redis_client = redis.StrictRedis(host=host, port=port, db=db, decode_responses=True)
             self.channel = channel
             self.redis_client.ping()
-            logging.info(f"Connected to Redis at {host}:{port}, DB: {db}")
+            logging.info(f"Connected to Redis at {host}:{port}, DB: {db}, Channel: {channel}")
         except redis.RedisError as e:
             logging.error(f"Failed to connect to Redis: {e}")
             raise
@@ -37,7 +36,6 @@ def get_temperature(url):
     :return: The temperature value or None if an error occurs
     """
     try:
-        # response = requests.get(url, timeout=1)  
         response = requests.get(url)      
         response.raise_for_status()
         data = response.json()
@@ -58,10 +56,17 @@ def get_temperature(url):
 def main():
     temperature_url = "http://localhost:8000/temperature"
     configs = json.load(open('config.json', 'r'))
-    # publish_interval = 1 
+    model_name = 'Transformer' 
+    
+    if model_name == 'LSTM':
+        channel_name = 'lstm:dht11'
+    elif model_name == 'Transformer':
+        channel_name = 'transformer:dht11'
+    else:
+        logging.error(f"Unknown model name '{model_name}'")
 
     try:
-        publisher = Publisher()
+        publisher = Publisher(channel=channel_name)
     except Exception as e:
         logging.critical("Exiting due to Redis connection failure.")
         return

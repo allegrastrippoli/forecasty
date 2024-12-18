@@ -14,7 +14,7 @@ import sys
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 0  # Default Redis DB
-CHANNEL = 'dht11:temperature'
+CHANNEL = 'transformer:dht11'
 REAL_TIME = True
 
 logging.basicConfig(

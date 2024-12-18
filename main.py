@@ -1,7 +1,6 @@
 from data_loader import DataLoader
 from data_processor import DataProcessor
 from model_manager import ModelManager
-from utils import multistep_plot
 from config import Config 
 
 if __name__ == "__main__":
@@ -10,6 +9,7 @@ if __name__ == "__main__":
     df = dataLoader.load_data()
     dataProcessor = DataProcessor(config)
     train_multistep, val_multistep = dataProcessor.process(df)
-    modelManager = ModelManager(config)
+    modelManager = ModelManager(config, 'Transformer')
     model = modelManager.build_model(train_multistep, val_multistep)
+    
     
