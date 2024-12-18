@@ -1,36 +1,31 @@
 from keras_tuner import HyperModel, RandomSearch
 import tensorflow as tf
-import json
-import math 
-
-configs = json.load(open('config.json', 'r'))
-HISTORY_SIZE = configs['history_size']
-TARGET_SIZE = configs['target_size']
-PATIENCE = configs['patience']
-EPOCHS = configs['epochs']
-STEP = configs['step']
-MAX_TRIALS = configs['max_trials']
-EXECUTIONS_PER_TRIAL = configs['executions_per_trial']
+import math
 
 class Transformer(HyperModel):
-    def __init__(self, train_shape=(math.ceil(HISTORY_SIZE/STEP),1), patience=PATIENCE, epochs=EPOCHS, max_trials=MAX_TRIALS, executions_per_trial=EXECUTIONS_PER_TRIAL):
+    def __init__(self, config):
         super(Transformer, self).__init__()
-        self.train_shape = train_shape
-        self.patience = patience
-        self.epochs = epochs
+        self.config = config  
+        self.train_shape = math.ceil(config.history_size / config.step, 1)
+        self.patience = config.patience
+        self.epochs = config.epochs
+        self.max_trials = config.max_trials
+        self.executions_per_trial = config.executions_per_trial
+        
         self.tuner = RandomSearch(
             self,
             objective='val_mae',
             overwrite=True,
-            max_trials=max_trials,
-            executions_per_trial=executions_per_trial,
-            directory='model',
+            max_trials=self.max_trials,
+            executions_per_trial=self.executions_per_trial,
+            directory=config.model_dir, 
             project_name='transformer_tuning'
         )
 
     def build(self, hp):
         inputs = tf.keras.Input(shape=self.train_shape)
         x = self.positional_encoding_layer(inputs)
+        
         num_transformer_blocks = hp.Int('num_transformer_blocks', min_value=1, max_value=3)
         for i in range(num_transformer_blocks):
             x = self.transformer_block(
@@ -41,7 +36,7 @@ class Transformer(HyperModel):
             )
         
         x = tf.keras.layers.GlobalAveragePooling1D()(x)
-        outputs = tf.keras.layers.Dense(TARGET_SIZE, name="dense_layer")(x)
+        outputs = tf.keras.layers.Dense(self.config.target_size, name="dense_layer")(x)
 
         learning_rate = hp.Float('learning_rate', min_value=1e-5, max_value=1e-3, sampling='log')
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="transformer")
@@ -55,7 +50,7 @@ class Transformer(HyperModel):
 
     def transformer_block(self, x, head_size, ff_dim, dropout):
         attention_output = tf.keras.layers.MultiHeadAttention(
-            num_heads=head_size // 8, 
+            num_heads=head_size // 8,
             key_dim=head_size
         )(x, x)
         attention_output = tf.keras.layers.Dropout(dropout)(attention_output)
@@ -82,7 +77,7 @@ class Transformer(HyperModel):
         
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=self.patience, restore_best_weights=True)
         
-        tensorboard_callback = tf.keras.callbacks.TensorBoard("model/content/tb_logs")
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(self.config.tensorboard_log_dir)  # Use the tensorboard log dir from the config
         
         tuner.search(train_multistep, validation_data=val_multistep, epochs=self.epochs, callbacks=[early_stopping, tensorboard_callback])
 
