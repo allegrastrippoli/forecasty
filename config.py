@@ -5,14 +5,13 @@ class Config:
         with open(config_path, 'r') as f:
             configs = json.load(f)
 
-        # General parameters
         self.cache_dir = configs['cache_dir']
         self.cache_file = configs['cache_file']
         self.raw_data = configs['raw_data']
         self.timestamp_col = configs['timestamp_col']
         self.value_col = configs['value_col']
 
-        # Data processing parameters
+        # Data processing
         self.history_size = configs['history_size']
         self.target_size = configs['target_size']
         self.batch_size = configs['batch_size']
@@ -21,17 +20,17 @@ class Config:
         self.buffer_size = configs.get('buffer_size', 1000)
         self.shuffle_seed = configs.get('shuffle_seed', 42)
 
-        # Model parameters
+        # Model 
         self.model_dir = configs.get('model_dir', 'model')
         self.tensorboard_log_dir = configs.get('tensorboard_log_dir', 'logs/tensorboard')
 
-        # Training parameters
+        # Training 
         self.patience = configs['patience']
         self.epochs = configs['epochs']
         self.max_trials = configs['max_trials']
         self.executions_per_trial = configs['executions_per_trial']
 
-        # Hyperparameter tuning ranges
+        # Tuning
         self.num_lstm_layers_min = configs.get('num_lstm_layers_min', 1)
         self.num_lstm_layers_max = configs.get('num_lstm_layers_max', 3)
         self.dropout_min = configs.get('dropout_min', 0.1)

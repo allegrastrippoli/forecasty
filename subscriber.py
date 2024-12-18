@@ -10,8 +10,6 @@ import json
 import time
 import sys
 
-configs = json.load(open('config.json', 'r'))
-HISTORY_SIZE = configs['history_size']
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 0  # Default Redis DB
@@ -35,14 +33,14 @@ class Subscriber:
         host: str = REDIS_HOST,
         port: int = REDIS_PORT,
         db: int = REDIS_DB,
-        history_size: int = HISTORY_SIZE,
         real_time: bool = REAL_TIME,
         prediction_callback: Optional[Callable[[deque, Optional[object]], None]] = None,
         model: Optional[object] = None,
-        scaler: Optional[object] = None
+        scaler: Optional[object] = None,
+        config = None,
     ):
         self.channel = channel
-        self.history_size = history_size
+        self.history_size = config.history_size
         self.real_time = real_time
         self.model = model  
         self.scaler = scaler
